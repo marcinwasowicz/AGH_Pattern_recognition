@@ -1,0 +1,1 @@
+from private_architecture.private_architecture import build_convolutional_architecture

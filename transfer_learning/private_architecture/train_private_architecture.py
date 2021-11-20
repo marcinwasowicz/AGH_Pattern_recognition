@@ -2,9 +2,7 @@ import logging
 import pickle
 
 from dataset import load_dataset, LASAGNE_MUSAKA_TART, DUMBELL_KETTLEBELL_BAREBELL
-from private_architecture.private_architecture import (
-    build_convolutional_architecture,
-)
+from private_architecture import build_convolutional_architecture
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("private architecture trainer")
