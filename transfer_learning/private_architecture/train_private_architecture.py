@@ -9,9 +9,11 @@ from private_architecture.private_architecture import (
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("private architecture trainer")
 
+EPOCHS = 150
+
 
 def train_network(name, net, x, y):
-    history = net.fit(x, validation_data=y, epochs=150)
+    history = net.fit(x, validation_data=y, epochs=EPOCHS)
     net.save(f"models/{name}")
     with open(f"histories/{name}.pkl", "w+b") as history_binary:
         pickle.dump(history.history, history_binary)

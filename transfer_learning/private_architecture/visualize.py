@@ -23,6 +23,8 @@ def plot_training_results(name, history_plot_dir, history):
 if __name__ == "__main__":
 
     for training_history_file in os.scandir("histories"):
+        if training_history_file.name.startswith("."):
+            continue
         network_name = training_history_file.name.split(".")[-2]
         history_obj = pickle.load(open(training_history_file.path, "rb"))
 
