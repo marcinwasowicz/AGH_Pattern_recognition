@@ -22,7 +22,7 @@ def get_cifar10_pretrained(cifar10_path, num_classes=3):
     )
     model2 = tf.keras.models.Model(inputs=model1.input, outputs=new_dense_layer)
     model2.compile(
-        optimizer=tf.keras.optimizers.SGD(learning_rate=0.001, momentum=0.9),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
         loss=tf.keras.losses.SparseCategoricalCrossentropy(),
         metrics=["acc"],
     )
