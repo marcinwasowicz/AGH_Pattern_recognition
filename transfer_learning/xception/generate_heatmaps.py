@@ -32,7 +32,7 @@ def generate_heatmap(image, feature_extractor, classifier, label):
 
 
 def plot_heatmaps(name, correct, incorrect, feature_extractor, classifier):
-    for image, label in correct:
+    for count, (image, label) in enumerate(correct):
         plt.suptitle(name)
         plt.subplot(1, 2, 1)
         plt.imshow(image.numpy().astype("uint8"))
@@ -40,10 +40,11 @@ def plot_heatmaps(name, correct, incorrect, feature_extractor, classifier):
         plt.subplot(1, 2, 2)
         plt.imshow(generate_heatmap(image, feature_extractor, classifier, label))
         plt.title("heatmap")
+        plt.savefig(f"heatmaps/{name}/correct_{count}.jpg")
         plt.show()
         plt.clf()
 
-    for image, label, classification in incorrect:
+    for count, (image, label, classification) in enumerate(incorrect):
         plt.suptitle(name)
         plt.subplot(1, 3, 1)
         plt.imshow(image.numpy().astype("uint8"))
@@ -64,6 +65,7 @@ def plot_heatmaps(name, correct, incorrect, feature_extractor, classifier):
         plt.title(
             f"heatmap for class {test.class_names[label]}", fontdict={"fontsize": 8}
         )
+        plt.savefig(f"heatmaps/{name}/incorrect_{count}.jpg")
         plt.show()
         plt.clf()
 
