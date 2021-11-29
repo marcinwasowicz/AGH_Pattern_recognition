@@ -9,16 +9,14 @@ class GANTrainer:
         self,
         generator,
         discriminator,
-        discriminator_dir,
-        generator_dir,
+        checkpoint_manager,
         discriminator_lr=1e-4,
         generator_lr=1e-4,
     ):
         self.generator = generator
         self.discriminator = discriminator
 
-        self.discriminator_dir = discriminator_dir
-        self.generator_dir = generator_dir
+        self.checkpoint_manager = checkpoint_manager
 
         self.input_dim = self.generator.layers[0].input_shape[1]
         self.output_shape = self.generator.layers[-1].output_shape[1:]
@@ -32,14 +30,6 @@ class GANTrainer:
 
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger("gan trainer")
-
-    def discriminator_checkpoint(self, epoch):
-        discriminator_path = f"{self.discriminator_dir}/discriminator_{epoch}"
-        self.discriminator.save(discriminator_path)
-
-    def generator_checkpoint(self, epoch):
-        generator_path = f"{self.generator_dir}/generator_{epoch}"
-        self.generator.save(generator_path)
 
     def discriminator_step(self, images, batch_size):
         noise = tf.random.normal([batch_size, self.input_dim])
@@ -117,5 +107,6 @@ class GANTrainer:
             )
 
             if epoch % checkpoint_interval == 0:
-                self.discriminator_checkpoint(epoch)
-                self.generator_checkpoint(epoch)
+                self.checkpoint_manager.dump_gan(
+                    epoch, self.discriminator, self.generator
+                )
