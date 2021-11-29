@@ -5,15 +5,26 @@ import tensorflow as tf
 
 
 class GANTrainer:
-    def __init__(self, generator, discriminator):
+    def __init__(
+        self,
+        generator,
+        discriminator,
+        discriminator_dir,
+        generator_dir,
+        discriminator_lr=1e-4,
+        generator_lr=1e-4,
+    ):
         self.generator = generator
         self.discriminator = discriminator
+
+        self.discriminator_dir = discriminator_dir
+        self.generator_dir = generator_dir
 
         self.input_dim = self.generator.layers[0].input_shape[1]
         self.output_shape = self.generator.layers[-1].output_shape[1:]
 
-        self.generator_optimizer = tf.keras.optimizers.Adam(1e-5)
-        self.discriminator_optimizer = tf.keras.optimizers.Adam(1e-5)
+        self.generator_optimizer = tf.keras.optimizers.Adam(discriminator_lr)
+        self.discriminator_optimizer = tf.keras.optimizers.Adam(generator_lr)
 
         self.loss_function_calculator = tf.keras.losses.BinaryCrossentropy(
             from_logits=True
@@ -21,6 +32,14 @@ class GANTrainer:
 
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger("gan trainer")
+
+    def discriminator_checkpoint(self, epoch):
+        discriminator_path = f"{self.discriminator_dir}/discriminator_{epoch}"
+        self.discriminator.save(discriminator_path)
+
+    def generator_checkpoint(self, epoch):
+        generator_path = f"{self.generator_dir}/generator_{epoch}"
+        self.generator.save(generator_path)
 
     def discriminator_step(self, images, batch_size):
         noise = tf.random.normal([batch_size, self.input_dim])
@@ -66,8 +85,15 @@ class GANTrainer:
         generator_loss = self.generator_step(batch_size)
         return discriminator_loss, generator_loss
 
-    def train(self, dataset: tf.data.Dataset, epochs, batch_size):
-        for epoch in range(epochs):
+    def train(
+        self,
+        dataset: tf.data.Dataset,
+        first_epoch,
+        final_epoch,
+        batch_size,
+        checkpoint_interval,
+    ):
+        for epoch in range(first_epoch, final_epoch):
             discriminator_losses = []
             generator_losses = []
             batch_times = []
@@ -86,6 +112,10 @@ class GANTrainer:
 
             self.logger.info(
                 "Losses after epoch {}: discriminator: {}, generator: {}. Calculations took {}".format(
-                    epoch + 1, avg_disc_loss, avg_gen_loss, epoch_time
+                    epoch, avg_disc_loss, avg_gen_loss, epoch_time
                 )
             )
+
+            if epoch % checkpoint_interval == 0:
+                self.discriminator_checkpoint(epoch)
+                self.generator_checkpoint(epoch)
