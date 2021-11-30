@@ -1,7 +1,7 @@
-import logging
 import time
 
 import tensorflow as tf
+from tqdm import tqdm
 
 
 class GANTrainer:
@@ -24,12 +24,7 @@ class GANTrainer:
         self.generator_optimizer = tf.keras.optimizers.Adam(discriminator_lr)
         self.discriminator_optimizer = tf.keras.optimizers.Adam(generator_lr)
 
-        self.loss_function_calculator = tf.keras.losses.BinaryCrossentropy(
-            from_logits=True
-        )
-
-        logging.basicConfig(level=logging.INFO)
-        self.logger = logging.getLogger("gan trainer")
+        self.loss_function_calculator = tf.keras.losses.BinaryCrossentropy()
 
     def discriminator_step(self, images, batch_size):
         noise = tf.random.normal([batch_size, self.input_dim])
@@ -88,23 +83,26 @@ class GANTrainer:
             generator_losses = []
             batch_times = []
 
-            for batch in dataset:
+            graphic_batch_generator = tqdm(list(dataset), desc=f"Epoch: {epoch}")
+            for batch in graphic_batch_generator:
                 start = time.time()
                 discriminator_loss, generator_loss = self.step(batch, batch_size)
-                batch_times.append(time.time() - start)
 
+                batch_times.append(time.time() - start)
                 discriminator_losses.append(discriminator_loss)
                 generator_losses.append(generator_loss)
 
-            epoch_time = sum(batch_times)
-            avg_disc_loss = sum(discriminator_losses) / len(discriminator_losses)
-            avg_gen_loss = sum(generator_losses) / len(generator_losses)
+                epoch_time = sum(batch_times)
+                avg_disc_loss = sum(discriminator_losses) / len(discriminator_losses)
+                avg_gen_loss = sum(generator_losses) / len(generator_losses)
 
-            self.logger.info(
-                "Losses after epoch {}: discriminator: {}, generator: {}. Calculations took {}".format(
-                    epoch, avg_disc_loss, avg_gen_loss, epoch_time
+                graphic_batch_generator.set_postfix(
+                    {
+                        "time": epoch_time,
+                        "discriminator loss": avg_disc_loss.numpy(),
+                        "generator_loss": avg_gen_loss.numpy(),
+                    }
                 )
-            )
 
             if epoch % checkpoint_interval == 0:
                 self.checkpoint_manager.dump_gan(
