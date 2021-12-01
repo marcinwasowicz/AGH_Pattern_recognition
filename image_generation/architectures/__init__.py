@@ -1,2 +1,3 @@
 from architectures.discriminator import build_discriminator
 from architectures.transpose_conv_generator import build_transpose_conv_generator
+from architectures.upsampling_generator import build_upsampling_generator
