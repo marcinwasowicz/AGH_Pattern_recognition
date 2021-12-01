@@ -104,11 +104,16 @@ class GANTrainer:
                     }
                 )
 
+            avg_gen_loss = str((sum(generator_losses) / len(generator_losses)).numpy())
+            avg_disc_loss = str(
+                (sum(discriminator_losses) / len(discriminator_losses)).numpy()
+            )
+
             if epoch % checkpoint_interval == 0:
                 self.checkpoint_manager.dump_gan(
                     epoch,
-                    (sum(discriminator_losses) / len(discriminator_losses)).numpy(),
-                    (sum(generator_losses) / len(generator_losses)).numpy(),
+                    avg_disc_loss,
+                    avg_gen_loss,
                     self.discriminator,
                     self.generator,
                 )
