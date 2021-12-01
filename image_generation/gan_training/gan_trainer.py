@@ -106,5 +106,9 @@ class GANTrainer:
 
             if epoch % checkpoint_interval == 0:
                 self.checkpoint_manager.dump_gan(
-                    epoch, self.discriminator, self.generator
+                    epoch,
+                    (sum(discriminator_losses) / len(discriminator_losses)).numpy(),
+                    (sum(generator_losses) / len(generator_losses)).numpy(),
+                    self.discriminator,
+                    self.generator,
                 )

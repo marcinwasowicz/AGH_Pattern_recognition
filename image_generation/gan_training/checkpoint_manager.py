@@ -1,3 +1,4 @@
+import json
 import os
 
 from matplotlib import pyplot as plt
@@ -9,13 +10,17 @@ class CheckpointManager:
         self.generator_path = generator_path
         self.noise_samples = noise_samples
 
-    def dump_discriminator(self, epoch, discriminator):
-        path = f"{self.discriminator_path}/discriminator_{epoch}"
-        discriminator.save(path)
+    def dump_discriminator(self, epoch, loss, discriminator):
+        discriminator_path = f"{self.discriminator_path}/discriminator_{epoch}"
+        loss_path = f"{self.discriminator_path}/discriminator_{epoch}_loss.json"
 
-    def dump_generator(self, epoch, generator):
+        discriminator.save(discriminator_path)
+        json.dump({"loss": loss}, open(loss_path, "w+"))
+
+    def dump_generator(self, epoch, loss, generator):
         generator_path = f"{self.generator_path}/generator_{epoch}"
         images_path = f"{self.generator_path}/generator_{epoch}_images"
+        loss_path = f"{self.generator_path}/generator_{epoch}_loss.json"
 
         os.makedirs(images_path, exist_ok=True)
         generator.save(generator_path)
@@ -28,6 +33,10 @@ class CheckpointManager:
             plt.savefig(f"{images_path}/{image_name}.jpg")
             plt.clf()
 
-    def dump_gan(self, epoch, discriminator, generator):
-        self.dump_generator(epoch, generator)
-        self.dump_discriminator(epoch, discriminator)
+        json.dump({"loss": loss}, open(loss_path, "w+"))
+
+    def dump_gan(
+        self, epoch, discriminator_loss, generator_loss, discriminator, generator
+    ):
+        self.dump_generator(epoch, generator_loss, generator)
+        self.dump_discriminator(epoch, discriminator_loss, discriminator)
