@@ -1,0 +1,2 @@
+from gan_training.gan_training_config.transpose_conv_config import transpose_conv_config
+from gan_training.gan_training_config.upsampling_config import upsampling_config
