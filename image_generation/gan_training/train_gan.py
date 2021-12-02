@@ -22,77 +22,57 @@ AUGMENTATION_FACTOR = 3
 DATASET_PATH = "../dataset/data/penguin"
 NOISE_SAMPLES_PATH = "noise_samples/noise_samples.npy"
 
+
+def train_from_config(config, noise, data, discriminator_callback, generator_callback):
+    checkpoint_manager = CheckpointManager(
+        discriminator_path=config["discriminator_path"],
+        generator_path=config["generator_path"],
+        noise_samples=noise,
+    )
+    if "generator" in config:
+        generator = tf.keras.models.load_model(config["generator"])
+    else:
+        generator = generator_callback()
+
+    if "discriminator" in config:
+        discriminator = tf.keras.models.load_model(config["discriminator"])
+    else:
+        discriminator = discriminator_callback()
+
+    trainer = GANTrainer(
+        generator=generator,
+        discriminator=discriminator,
+        checkpoint_manager=checkpoint_manager,
+        generator_lr=config["generator_lr"],
+        discriminator_lr=config["discriminator_lr"],
+    )
+
+    trainer.train(
+        data,
+        first_epoch=config["first_epoch"],
+        final_epoch=config["final_epoch"],
+        batch_size=BATCH_SIZE,
+        checkpoint_interval=CHECKPOINT_INTERVAL,
+    )
+
+
 if __name__ == "__main__":
     dataset = load_dataset(DATASET_PATH, IMAGE_SIZE)
     dataset = augment_dataset(dataset, AUGMENTATION_FACTOR).batch(BATCH_SIZE)
-    noise = np.load(NOISE_SAMPLES_PATH)
+    noise_samples = np.load(NOISE_SAMPLES_PATH)
 
-    transpose_conv_manager = CheckpointManager(
-        discriminator_path=transpose_conv_config["discriminator_path"],
-        generator_path=transpose_conv_config["generator_path"],
-        noise_samples=noise,
-    )
-    if "generator" in transpose_conv_config:
-        transpose_conv_generator = tf.keras.models.load_model(
-            transpose_conv_config["generator"]
+    for gan_config, dis_callback, gen_callback in [
+        (
+            transpose_conv_config,
+            lambda: build_discriminator(),
+            lambda: build_transpose_conv_generator(),
+        ),
+        (
+            upsampling_config,
+            lambda: build_discriminator(),
+            lambda: build_upsampling_generator(),
+        ),
+    ]:
+        train_from_config(
+            gan_config, noise_samples, dataset, dis_callback, gen_callback
         )
-    else:
-        transpose_conv_generator = build_transpose_conv_generator()
-
-    if "discriminator" in transpose_conv_config:
-        transpose_conv_discriminator = tf.keras.models.load_model(
-            transpose_conv_config["discriminator"]
-        )
-    else:
-        transpose_conv_discriminator = build_discriminator()
-
-    transpose_config_trainer = GANTrainer(
-        generator=transpose_conv_generator,
-        discriminator=transpose_conv_discriminator,
-        checkpoint_manager=transpose_conv_manager,
-        generator_lr=transpose_conv_config["generator_lr"],
-        discriminator_lr=transpose_conv_config["discriminator_lr"],
-    )
-
-    transpose_config_trainer.train(
-        dataset,
-        first_epoch=transpose_conv_config["first_epoch"],
-        final_epoch=transpose_conv_config["final_epoch"],
-        batch_size=BATCH_SIZE,
-        checkpoint_interval=CHECKPOINT_INTERVAL,
-    )
-
-    upsampling_manager = CheckpointManager(
-        discriminator_path=upsampling_config["discriminator_path"],
-        generator_path=upsampling_config["generator_path"],
-        noise_samples=noise,
-    )
-    if "generator" in upsampling_config:
-        upsampling_generator = tf.keras.models.load_model(
-            upsampling_config["generator"]
-        )
-    else:
-        upsampling_generator = build_upsampling_generator()
-
-    if "discriminator" in upsampling_config:
-        upsampling_discriminator = tf.keras.models.load_model(
-            upsampling_config["discriminator"]
-        )
-    else:
-        upsampling_discriminator = build_discriminator()
-
-    upsampling_trainer = GANTrainer(
-        generator=upsampling_generator,
-        discriminator=upsampling_discriminator,
-        checkpoint_manager=upsampling_manager,
-        generator_lr=upsampling_config["generator_lr"],
-        discriminator_lr=upsampling_config["discriminator_lr"],
-    )
-
-    upsampling_trainer.train(
-        dataset,
-        first_epoch=upsampling_config["first_epoch"],
-        final_epoch=upsampling_config["final_epoch"],
-        batch_size=BATCH_SIZE,
-        checkpoint_interval=CHECKPOINT_INTERVAL,
-    )
